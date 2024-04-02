@@ -30,9 +30,7 @@ defmodule Ueberauth.Strategy.SAML do
     sp = put_uris(conn, sp_rec)
     relay_state = :crypto.strong_rand_bytes(24) |> Base.url_encode64()
     idp_signin_url = UeberauthSAML.esaml_idp_metadata(idp_rec, :login_location)
-
-    xml_fragment =
-      :esaml_sp.generate_authn_request(idp_signin_url, sp, @name_format_email) |> IO.inspect()
+    xml_fragment = :esaml_sp.generate_authn_request(idp_signin_url, sp, @name_format_email)
 
     redirect_url =
       :esaml_binding.encode_http_redirect(
@@ -66,20 +64,13 @@ defmodule Ueberauth.Strategy.SAML do
     with {:ok, assertion} <- decode_idp_response(conn, sp, saml_encoding, saml_response),
          :ok <- validate_state(conn, assertion, relay_state) do
       Conn.put_private(conn, @private_key_assertion, assertion)
-      |> IO.inspect()
     end
   end
 
   @spec put_uris(Conn.t(), :esaml.sp()) :: :esaml.sp()
   defp put_uris(conn, sp_rec) do
-    request_url = request_url(conn)
     callback_url = callback_url(conn)
-
-    UeberauthSAML.esaml_sp(
-      sp_rec,
-      metadata_uri: String.to_charlist(Path.join(request_url, "metadata")),
-      consume_uri: String.to_charlist(callback_url)
-    )
+    UeberauthSAML.esaml_sp(sp_rec, consume_uri: String.to_charlist(callback_url))
   end
 
   @spec safe_decode_www_form(String.t() | nil) :: binary
@@ -103,17 +94,9 @@ defmodule Ueberauth.Strategy.SAML do
   defp validate_state(conn, assertion, relay_state)
 
   # IDP-initiated flow
-  defp validate_state(conn, %{subject: %{in_response_to: ""}}, relay_state) do
+  defp validate_state(conn, %{subject: %{in_response_to: ""}}, _relay_state) do
     if option(conn, :allow_idp_initiated_flow) do
-      if allowed_target_urls = option(conn, :allowed_target_urls) do
-        if relay_state in allowed_target_urls do
-          :ok
-        else
-          set_errors!(conn, [error("invalid_target", "Invalid target URL")])
-        end
-      else
-        :ok
-      end
+      :ok
     else
       set_errors!(conn, [
         error("invalid_flow", "Identity Provider-initiated logins are not allowed")
@@ -127,7 +110,7 @@ defmodule Ueberauth.Strategy.SAML do
 
     cond do
       rs_in_session == nil || rs_in_session != relay_state ->
-        set_errors!(conn, [error("invalid_state", "Invalid target URL")])
+        set_errors!(conn, [error("invalid_state", "Invalid relay state (CSRF protection)")])
 
       true ->
         :ok
