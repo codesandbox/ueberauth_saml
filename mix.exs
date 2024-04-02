@@ -30,6 +30,7 @@ defmodule UeberauthSAML.MixProject do
 
   defp deps do
     [
+      {:samly, github: "codesandbox/samly", branch: "aj/types"},
       {:ueberauth, "~> 0.10"}
     ]
   end
