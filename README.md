@@ -11,6 +11,9 @@ This library is one of many [plugins](https://github.com/ueberauth/ueberauth/wik
 Specifically, this one adapts Ueberauth to integrate with SAML-based identity providers.
 SAML is a separate protocol from OAuth that can also be used for single sign-on applications.
 
+This library does not provide a full SAML service or identity provider implementation.
+For that, see [Samly](https://hex.pm/package/samly).
+
 ## Installation
 
 This application is not currently available on `Hex.pm`.
@@ -132,6 +135,22 @@ One identity provider should be configured for each Ueberauth provider (with the
 | `signed_assertion_in_resp` | boolean | `true` | Whether your application should expect the identity provider to sign assertions in its responses. Identity providers may sign the envelope without signing the assertion. Defaults to `true`. |
 | `signed_envelopes_in_resp` | boolean | `true` | Whether your application should expect the identity provider to sign the envelopes of its responses. Identity providers may sign the envelope without signing the assertion. Defaults to `true`. |
 
+For example configurations, see [configuration](guides/configuration.md).
+
+## Attribute Mapping
+
+SAML allows communicating additional information via mapped attributes.
+The following attribute names will be passed through to the Ueberauth `Auth` struct:
+
+* `birthday`
+* `description`
+* `email` (if not mapped, and the SAML Name ID format is email, then the SAML name will be used instead)
+* `first_name`
+* `last_name`
+* `location`
+* `name` (if `first_name` and `last_name` are mapped, these will be used instead)
+* `nickname`
+* `phone`
 
 ## Acknowledgments
 
