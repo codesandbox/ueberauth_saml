@@ -89,10 +89,8 @@ config :samly, Samly.Provider,
     %{
       id: "google_saml",
       sp_id: "my_app",
-      base_url: "https://example.com/",
       metadata_file: "/path/to/idp-metadata.xml",
       sign_requests: true,
-      sign_metadata: true,
       signed_assertion_in_resp: false,
       signed_envelopes_in_resp: false
     }
